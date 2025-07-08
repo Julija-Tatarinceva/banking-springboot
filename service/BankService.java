@@ -14,15 +14,9 @@ import java.util.List;
 @Service
 public class BankService {
 
-//    public static Map<Integer, BankAccount> accounts = Storage.loadAccounts("C:\\Users\\juuli\\Downloads\\BankingApp\\BankingApp\\src\\main\\java\\com\\BankingApp\\storage\\Accounts.txt");
     private final BankAccountRepository bankAccountRepository;
     private final UserService userService;
 
-    //    private static final Logger logger = LogManager.getLogger(BankService.class);
-    //    public static BankAccount account =  new BankAccount(1234, "pass", 500.0f);
-//    public static Map<Integer, BankAccount> accounts = Map.of(
-//            1234, account
-//    );
     @Autowired
     public BankService(BankAccountRepository repository, UserService userService) {
         this.bankAccountRepository = repository;
@@ -50,7 +44,7 @@ public class BankService {
 
         System.out.println(accountTo);
         Transaction newTransaction = accountFrom.transferTo(accountTo, amount);
-
+        logger.info(newTransaction);
         bankAccountRepository.save(accountFrom);
         bankAccountRepository.save(accountTo);
         return newTransaction;
@@ -73,6 +67,7 @@ public class BankService {
         BankAccount accountFrom = bankAccountRepository.findById(fromId)
                 .orElseThrow(() -> new RuntimeException("Account from not found"));
         Transaction newTransaction = accountFrom.withdraw(amount);
+        logger.info(newTransaction);
         bankAccountRepository.save(accountFrom);
         return newTransaction;
     }
@@ -80,11 +75,4 @@ public class BankService {
     public List<BankAccount> getAccountsByUser(Integer userId) {
         return bankAccountRepository.findByUserId(userId);
     }
-
-//    public boolean authenticate(int id, String password) {
-//        final Logger logger = LogManager.getLogger(BankService.class);
-//        BankAccount acc = bankAccountRepository.findById(id);
-//        logger.info("Attempted login into account {}", id);
-//        return acc.authenticate(password);
-//    }
 }

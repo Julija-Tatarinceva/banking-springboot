@@ -68,11 +68,6 @@ public class BankAccount implements Serializable {
         return new Transaction("Withdraw", amount, this.id, null);
     }
 
-    // Displaying balance to user
-    public void printBalance() {
-        System.out.println("Your balance is: " + this.balance);
-    }
-
     // Transfer balance to another account
     public Transaction transferTo(BankAccount account, float amount) {
         this.balance -= amount;

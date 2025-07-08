@@ -2,22 +2,17 @@ package com.BankingApp.controller;
 
 import com.BankingApp.dto.LoginRequest;
 import com.BankingApp.dto.RegistrationRequest;
-import com.BankingApp.model.BankAccount;
 import com.BankingApp.model.User;
-import com.BankingApp.service.BankService;
 import com.BankingApp.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-
-import java.util.List;
 
 @Controller
 public class LoginController {
@@ -45,9 +40,6 @@ public class LoginController {
 
         session.setAttribute("userId", user.getId());
         return "redirect:/";
-        // Optional: fetch their accounts immediately
-//        List<BankAccount> accounts = bankService.getAccountsByUser(user.getId());
-//        session.setAttribute("accounts", accounts);
     }
 
     @GetMapping("/register")
@@ -57,9 +49,7 @@ public class LoginController {
     }
 
     @PostMapping("/register")
-    public String registerSubmit(@ModelAttribute RegistrationRequest registrationRequest, HttpSession session, Model model) {
-//        boolean authOK = accountService.authenticate(registrationRequest.getAccountNumber(), registrationRequest.getPassword());
-//        if(authOK) {
+    public String registerSubmit(@ModelAttribute RegistrationRequest registrationRequest, HttpSession session) {
         User newUser = userService.createAccount(registrationRequest.getEmail(), registrationRequest.getPassword(), registrationRequest.getName());
         session.setAttribute("userID", newUser.getId());
         return "redirect:/";

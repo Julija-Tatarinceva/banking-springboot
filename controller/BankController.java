@@ -1,12 +1,10 @@
 package com.BankingApp.controller;
 
-import com.BankingApp.dto.AccountRequest;
 import com.BankingApp.dto.LoginRequest;
 import com.BankingApp.model.BankAccount;
 import com.BankingApp.model.User;
 import com.BankingApp.service.BankService;
 import com.BankingApp.service.UserService;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,7 +47,7 @@ public class BankController {
             BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
             // If there is no selected account, then choose the first one by default
             if (selectedAccount == null && !accounts.isEmpty()) {
-                selectedAccount = accounts.get(0);
+                selectedAccount = accounts.getFirst();
                 session.setAttribute("selectedAccount", selectedAccount);
             }
             model.addAttribute("selectedAccount", selectedAccount);
@@ -116,7 +114,7 @@ public class BankController {
     }
 
     @GetMapping("/create")
-    public String createAccount(HttpSession session, Model model) {
+    public String createAccount() {
         return  "createAccount";
     }
 
