@@ -1,14 +1,14 @@
 package com.BankingApp.dto;
 
 public class LoginRequest {
-    private int accountNumber;
+    private String email;
     private String password;
 
     public LoginRequest() {} // Required for JSON deserialization
 
-    public LoginRequest(String password, int accountNumber) {
+    public LoginRequest(String password, String email) {
         this.password = password;
-        this.accountNumber = accountNumber;
+        this.email = email;
     }
 
     public String getPassword() {
@@ -19,11 +19,11 @@ public class LoginRequest {
         this.password = password;
     }
 
-    public int getAccountNumber() {
-        return accountNumber;
+    public String getEmail() {
+        return email;
     }
 
-    public void setAccountNumber(int accountNumber) {
-        this.accountNumber = accountNumber;
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

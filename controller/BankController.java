@@ -1,86 +1,133 @@
 package com.BankingApp.controller;
 
 import com.BankingApp.dto.AccountRequest;
-import com.BankingApp.model.Transaction;
+import com.BankingApp.dto.LoginRequest;
 import com.BankingApp.model.BankAccount;
+import com.BankingApp.model.User;
 import com.BankingApp.service.BankService;
+import com.BankingApp.service.UserService;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @Controller
 public class BankController {
 
-    private final BankService service;
+    private final BankService bankService;
+    private final UserService userService;
     final Logger logger = LogManager.getLogger(BankController.class);
 
-    public BankController(BankService service) {
-        this.service = service;
+    public BankController(BankService service, UserService userService) {
+        this.bankService = service;
+        this.userService = userService;
     }
 
 
     @GetMapping("/")
     public String showMenu(HttpSession session, Model model) {
-        BankAccount account = (BankAccount) session.getAttribute("account");
-        if (account == null) {
-            return "redirect:/login";
+        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId != null) {
+            User user = userService.findUserById(userId);
+            if (user == null) {
+                return "redirect:/login";
+            }
+            model.addAttribute("user", user);
+
+            // Fetch all user's bank accounts
+            List<BankAccount> accounts = bankService.getAccountsByUser(userId);
+            model.addAttribute("accounts", accounts);
+
+            // We store the selected account in session
+            BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
+            // If there is no selected account, then choose the first one by default
+            if (selectedAccount == null && !accounts.isEmpty()) {
+                selectedAccount = accounts.get(0);
+                session.setAttribute("selectedAccount", selectedAccount);
+            }
+            model.addAttribute("selectedAccount", selectedAccount);
+
+            return "menu";
         }
-        model.addAttribute("account", account);
-        return "menu";
+        model.addAttribute("user", new LoginRequest());
+        return "login";
     }
-    @GetMapping("/logout")
-    public String logoutScreen(HttpSession session, Model model) {
-        BankAccount account = (BankAccount) session.getAttribute("account");
 
-        model.addAttribute("account", null);
-        return "redirect:/login";
-    }
-    @PostMapping("/logout")
-    public String logout(HttpSession session, Model model) {
-        BankAccount account = (BankAccount) session.getAttribute("account");
+    @PostMapping("/selectAccount")
+    public String selectAccount(@RequestParam Long accountId, HttpSession session) {
+        BankAccount account = bankService.getById(Math.toIntExact(accountId));
 
-        model.addAttribute("account", null);
-        logger.info("Logout from {}", account.getAccountNumber());
-        return "redirect:/login";
+        // Verify this account belongs to the logged-in user for security
+        if(account != null && account.getUser().getId() == (Integer) session.getAttribute("userId")){
+            session.setAttribute("selectedAccount", account);
+        }
+        return "redirect:/";
     }
 
     @PostMapping("/deposit")
-    public String deposit(@RequestParam float amount, HttpSession session) {
-        BankAccount account = (BankAccount) session.getAttribute("account");
-        if (account == null) return "redirect:/login";
+    public String deposit(@RequestParam float amount, HttpSession session, RedirectAttributes redirectAttrs) {
+        BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
+        if (selectedAccount == null) {
+            redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
+            return "redirect:/";
+        }
 
-        service.deposit(account.getAccountNumber(), amount);
-        logger.info("Deposited {} from {}", amount, account.getAccountNumber());
-        session.setAttribute("account", service.getById(account.getAccountNumber()));
+        bankService.deposit(selectedAccount.getId(), amount);
+        logger.info("Deposited {} from {}", amount, selectedAccount.getId());
+        // Update the object for the view to show updated data
+        session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
         return "redirect:/";
     }
 
     @PostMapping("/withdraw")
-    public String withdraw(@RequestParam float amount, HttpSession session) {
-        BankAccount account = service.getById((Integer) session.getAttribute("accountID"));
-        if (account == null) return "redirect:/login";
+    public String withdraw(@RequestParam float amount, HttpSession session, RedirectAttributes redirectAttrs) {
+        BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
+        if (selectedAccount == null) {
+            redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
+            return "redirect:/";
+        }
 
-        service.withdraw(account.getAccountNumber(), amount);
-        logger.info("Withdrawn {} from {}", amount, account.getAccountNumber());
-        session.setAttribute("account", service.getById(account.getAccountNumber()));
+        bankService.withdraw(selectedAccount.getId(), amount);
+        logger.info("Withdrawn {} from {}", amount, selectedAccount.getId());
+
+        // Update the object for the view to show updated data
+        session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
         return "redirect:/";
     }
     @PostMapping("/transfer")
-    public String transfer(@RequestParam float amount, @RequestParam int idTo, HttpSession session) {
-        BankAccount account = service.getById((Integer) session.getAttribute("accountID"));
-        if (account == null) return "redirect:/login";
-
-        service.transfer(account.getAccountNumber(), idTo, amount);
-        logger.info("Transferred {} from {} to {}", amount, account.getAccountNumber(),  idTo);
-        session.setAttribute("account", service.getById(account.getAccountNumber()));
+    public String transfer(@RequestParam float amount, @RequestParam int idTo, HttpSession session, RedirectAttributes redirectAttrs) {
+        BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
+        if (selectedAccount == null) {
+            redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
+            return "redirect:/";
+        }
+        System.out.println("transfer from " + selectedAccount.getId() + " to " + idTo);
+        bankService.transfer(selectedAccount.getId(), idTo, amount);
+        logger.info("Transferred {} from {} to {}", amount, selectedAccount.getId(),  idTo);
+        session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
         return "redirect:/";
     }
 
-    @PostMapping
-    public BankAccount create(@RequestBody AccountRequest request) {
-        return service.createAccount(request.getPassword(), request.getBalance());
+    @GetMapping("/create")
+    public String createAccount(HttpSession session, Model model) {
+        return  "createAccount";
     }
+
+    @PostMapping("/create")
+    public String create(@RequestParam float balance, HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId == null) {
+            return "redirect:/login";
+        }
+        bankService.createAccount(Math.toIntExact(userId), balance);
+        return "redirect:/";  // back to menu after creation
+    }
+
 }

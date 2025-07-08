@@ -7,13 +7,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 
 import java.sql.*;
 import java.util.Arrays;
 
-@SpringBootApplication(exclude = {
-		org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class
-})
+@SpringBootApplication()
 public class BankingApplication {
 
 	private static Logger logger = LogManager.getLogger(BankingApplication.class);
@@ -23,6 +22,12 @@ public class BankingApplication {
 //		logger.info("Info log message");
 //		logger.error("Error log message");
 	}
+//	@Bean(name="entityManagerFactory")
+//	public LocalSessionFactoryBean sessionFactory() {
+//		LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
+//
+//		return sessionFactory;
+//	}
 //	@Bean
 //	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 //		return args -> {

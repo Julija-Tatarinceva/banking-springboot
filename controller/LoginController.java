@@ -3,8 +3,12 @@ package com.BankingApp.controller;
 import com.BankingApp.dto.LoginRequest;
 import com.BankingApp.dto.RegistrationRequest;
 import com.BankingApp.model.BankAccount;
+import com.BankingApp.model.User;
 import com.BankingApp.service.BankService;
+import com.BankingApp.service.UserService;
 import jakarta.servlet.http.HttpSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -13,40 +17,42 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.List;
+
 @Controller
 public class LoginController {
-
-
-    private final BankService accountService;
+    private final UserService userService;
+    final Logger logger = LogManager.getLogger(LoginController.class);
 
     @Autowired
-    public LoginController(BankService accountService) {
-        this.accountService = accountService;
+    public LoginController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/login")
     public String loginForm(Model model) {
-        model.addAttribute("account", new LoginRequest());
+        model.addAttribute("user", new LoginRequest());
         return "login";
     }
 
     @PostMapping("/login")
     public String loginSubmit(@ModelAttribute LoginRequest loginRequest, HttpSession session, Model model) {
-        boolean authOK = accountService.authenticate(loginRequest.getAccountNumber(), loginRequest.getPassword());
-        if(authOK) {
-            session.setAttribute("accountID", loginRequest.getAccountNumber());
-            return "redirect:/";
-        }else {
-            model.addAttribute("error", "Invalid account number or password");
-            model.addAttribute("account", new LoginRequest());
-
+        User user = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
+        if (user == null) {
+            model.addAttribute("error", "Invalid credentials");
             return "login";
         }
+
+        session.setAttribute("userId", user.getId());
+        return "redirect:/";
+        // Optional: fetch their accounts immediately
+//        List<BankAccount> accounts = bankService.getAccountsByUser(user.getId());
+//        session.setAttribute("accounts", accounts);
     }
 
     @GetMapping("/register")
     public String registerForm(Model model) {
-        model.addAttribute("account", new RegistrationRequest());
+        model.addAttribute("registrationRequest", new RegistrationRequest());
         return "register";
     }
 
@@ -54,10 +60,19 @@ public class LoginController {
     public String registerSubmit(@ModelAttribute RegistrationRequest registrationRequest, HttpSession session, Model model) {
 //        boolean authOK = accountService.authenticate(registrationRequest.getAccountNumber(), registrationRequest.getPassword());
 //        if(authOK) {
-        BankAccount newAccount = accountService.createAccount(registrationRequest.getPassword(), registrationRequest.getInitialBalance());
-        System.out.println(registrationRequest.getInitialBalance());
-        session.setAttribute("accountID", newAccount.getAccountNumber());
+        User newUser = userService.createAccount(registrationRequest.getEmail(), registrationRequest.getPassword(), registrationRequest.getName());
+        session.setAttribute("userID", newUser.getId());
         return "redirect:/";
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        Integer userId = (Integer) session.getAttribute("userId");
+        if (userId != null) {
+            logger.info("User (id={}) logged out", userId);
+        }
+        session.invalidate();
+        return "redirect:/login?logout";
     }
 }
 

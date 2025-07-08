@@ -1,15 +1,17 @@
 package com.BankingApp.dto;
 
 public class RegistrationRequest {
-    private float initialBalance;
+    private String email;
     private String password;
+    private String name;
 
     public RegistrationRequest() {
     } // Required for JSON deserialization
 
-    public RegistrationRequest(String password, int initialBalance) {
+    public RegistrationRequest(String email, String password, String name) {
+        this.email = email;
         this.password = password;
-        this.initialBalance = initialBalance;
+        this.name = name;
     }
 
     public String getPassword() {
@@ -20,11 +22,19 @@ public class RegistrationRequest {
         this.password = password;
     }
 
-    public float getInitialBalance() {
-        return initialBalance;
+    public String getEmail() {
+        return email;
     }
 
-    public void setInitialBalance(float initialBalance) {
-        this.initialBalance = initialBalance;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
