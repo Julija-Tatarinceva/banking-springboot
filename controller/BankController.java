@@ -1,6 +1,5 @@
 package com.BankingApp.controller;
 
-import com.BankingApp.dto.LoginRequest;
 import com.BankingApp.model.BankAccount;
 import com.BankingApp.model.User;
 import com.BankingApp.service.BankService;
@@ -71,7 +70,7 @@ public class BankController {
     }
 
     @PostMapping("/deposit")
-    public String deposit(@RequestParam float amount, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String deposit(@RequestParam BigDecimal amount, HttpSession session, RedirectAttributes redirectAttrs) {
         BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
         if (selectedAccount == null) {
             redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
@@ -86,7 +85,7 @@ public class BankController {
     }
 
     @PostMapping("/withdraw")
-    public String withdraw(@RequestParam float amount, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String withdraw(@RequestParam BigDecimal amount, HttpSession session, RedirectAttributes redirectAttrs) {
         BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
         if (selectedAccount == null) {
             redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
@@ -101,7 +100,7 @@ public class BankController {
         return "redirect:/";
     }
     @PostMapping("/transfer")
-    public String transfer(@RequestParam float amount, @RequestParam int idTo, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String transfer(@RequestParam BigDecimal amount, @RequestParam int idTo, HttpSession session, RedirectAttributes redirectAttrs) {
         BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
         if (selectedAccount == null) {
             redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
@@ -120,7 +119,7 @@ public class BankController {
     }
 
     @PostMapping("/create")
-    public String create(@RequestParam float balance, HttpSession session) {
+    public String create(@RequestParam BigDecimal balance, HttpSession session) {
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
             return "redirect:/login";

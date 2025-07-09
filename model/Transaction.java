@@ -1,11 +1,12 @@
 package com.BankingApp.model;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class Transaction implements Serializable {
     final String type;
-    final float amount;
+    final BigDecimal amount;
     final Integer fromAccount;
     final Integer toAccount;
     final LocalDateTime timestamp;
@@ -14,7 +15,7 @@ public class Transaction implements Serializable {
 //        System.out.println("Transaction created.");
 //    }
 
-    public Transaction(String type, float amount, Integer from, Integer to) {
+    public Transaction(String type, BigDecimal amount, Integer from, Integer to) {
         this.type = type;
         this.amount = amount;
         this.fromAccount = from;
@@ -30,7 +31,7 @@ public class Transaction implements Serializable {
         return fromAccount;
     }
 
-    public float getAmount() {
+    public BigDecimal getAmount() {
         return amount;
     }
 

@@ -3,6 +3,7 @@ package com.BankingApp.model;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Random;
 
 @Entity
@@ -10,7 +11,7 @@ import java.util.Random;
 public class BankAccount implements Serializable {
     @Id
     private final int id;
-    float balance;
+    BigDecimal balance;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -22,12 +23,12 @@ public class BankAccount implements Serializable {
         long timestamp = System.currentTimeMillis() % 10000000; // 7-digit base
         int random = new Random().nextInt(900) + 100; // 3-digit random
         this.id = Math.abs((int) ((timestamp * 1000) + random)); // might cause integer overflow in the future (2038+)
-        balance = 0;
+        balance = new BigDecimal("0");
         System.out.println("Bank Account Constructor");
     }
 
     // Parameterized constructor
-    public BankAccount(float balance) {
+    public BankAccount(BigDecimal balance) {
         // Unique account number
         long timestamp = System.currentTimeMillis() % 10000000;
         int random = new Random().nextInt(900) + 100;
@@ -35,7 +36,7 @@ public class BankAccount implements Serializable {
         this.balance = balance;
     }
     // Parameterized constructor
-    public BankAccount(User user, float balance) {
+    public BankAccount(User user, BigDecimal balance) {
         // Unique account number
         long timestamp = System.currentTimeMillis() % 10000000;
         int random = new Random().nextInt(900) + 100;
@@ -52,25 +53,25 @@ public class BankAccount implements Serializable {
         return user;
     }
 
-    public float getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
     // Method for increasing the balance
-    public Transaction deposit(float amount) {
-        this.balance += amount;
+    public Transaction deposit(BigDecimal amount) {
+        this.balance = this.balance.add(amount);
         return new Transaction("Deposit", amount, null, this.id);
     }
 
     // Method for decreasing the balance
-    public Transaction withdraw(float amount) {
-        this.balance -= amount;
+    public Transaction withdraw(BigDecimal amount) {
+        this.balance = this.balance.subtract(amount);
         return new Transaction("Withdraw", amount, this.id, null);
     }
 
     // Transfer balance to another account
-    public Transaction transferTo(BankAccount account, float amount) {
-        this.balance -= amount;
+    public Transaction transferTo(BankAccount account, BigDecimal amount) {
+        this.balance = this.balance.subtract(amount);
         account.deposit(amount);
         return new Transaction("Deposit", amount, this.id, account.getId());
     }

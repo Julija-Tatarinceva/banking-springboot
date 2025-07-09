@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -28,13 +29,13 @@ public class BankService {
                 .orElseThrow(() -> new RuntimeException("Account not found"));
     }
 
-    public BankAccount createAccount(int userId, float balance) {
+    public BankAccount createAccount(int userId, BigDecimal balance) {
         User userToBind = userService.findUserById(userId);
         BankAccount account = new BankAccount(userToBind, balance);
         return bankAccountRepository.save(account);
     }
 
-    public Transaction transfer(int fromId, int toId, float amount) {
+    public Transaction transfer(int fromId, int toId, BigDecimal amount) {
         BankAccount accountFrom = bankAccountRepository.findById(fromId)
                 .orElseThrow(() -> new RuntimeException("Account from not found"));
         BankAccount accountTo = bankAccountRepository.findById(toId)
@@ -50,7 +51,7 @@ public class BankService {
         return newTransaction;
     }
 
-    public Transaction deposit(int toId, float amount) {
+    public Transaction deposit(int toId, BigDecimal amount) {
         final Logger logger = LogManager.getLogger(BankService.class);
 
         BankAccount accountTo = bankAccountRepository.findById(toId)
@@ -63,7 +64,7 @@ public class BankService {
         return newTransaction;
     }
 
-    public Transaction withdraw(int fromId, float amount) {
+    public Transaction withdraw(int fromId, BigDecimal amount) {
         final Logger logger = LogManager.getLogger(BankService.class);
 
         BankAccount accountFrom = bankAccountRepository.findById(fromId)
