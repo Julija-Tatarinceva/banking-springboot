@@ -30,17 +30,17 @@ public class LoginController {
         return "login";
     }
 
-    @PostMapping("/login")
-    public String loginSubmit(@ModelAttribute LoginRequest loginRequest, HttpSession session, Model model) {
-        User user = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
-        if (user == null) {
-            model.addAttribute("error", "Invalid credentials");
-            return "login";
-        }
-
-        session.setAttribute("userId", user.getId());
-        return "redirect:/";
-    }
+//    @PostMapping("/login")
+//    public String loginSubmit(@ModelAttribute LoginRequest loginRequest, HttpSession session, Model model) {
+//        User user = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
+//        if (user == null) {
+//            model.addAttribute("error", "Invalid credentials");
+//            return "login";
+//        }
+//
+//        session.setAttribute("userId", user.getId());
+//        return "redirect:/";
+//    }
 
     @GetMapping("/register")
     public String registerForm(Model model) {
@@ -55,14 +55,14 @@ public class LoginController {
         return "redirect:/";
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId != null) {
-            logger.info("User (id={}) logged out", userId);
-        }
-        session.invalidate();
-        return "redirect:/login?logout";
-    }
+//    @GetMapping("/logout")
+//    public String logout(HttpSession session) {
+//        Integer userId = (Integer) session.getAttribute("userId");
+//        if (userId != null) {
+//            logger.info("User (id={}) logged out", userId);
+//        }
+//        session.invalidate();
+//        return "redirect:/login?logout";
+//    }
 }
 

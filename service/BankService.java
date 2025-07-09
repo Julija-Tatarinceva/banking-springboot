@@ -49,6 +49,7 @@ public class BankService {
         bankAccountRepository.save(accountTo);
         return newTransaction;
     }
+
     public Transaction deposit(int toId, float amount) {
         final Logger logger = LogManager.getLogger(BankService.class);
 
@@ -61,6 +62,7 @@ public class BankService {
         bankAccountRepository.save(accountTo);
         return newTransaction;
     }
+
     public Transaction withdraw(int fromId, float amount) {
         final Logger logger = LogManager.getLogger(BankService.class);
 

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -28,35 +29,35 @@ public class BankController {
         this.userService = userService;
     }
 
-
     @GetMapping("/")
-    public String showMenu(HttpSession session, Model model) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId != null) {
-            User user = userService.findUserById(userId);
-            if (user == null) {
-                return "redirect:/login";
-            }
-            model.addAttribute("user", user);
+    public String showMenu(HttpSession session, Model model, Principal principal) {
+        String email = principal.getName(); // from Spring Security
 
-            // Fetch all user's bank accounts
-            List<BankAccount> accounts = bankService.getAccountsByUser(userId);
-            model.addAttribute("accounts", accounts);
+        // Load the user directly by email
+        User user = userService.findUserByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            // We store the selected account in session
-            BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
+        model.addAttribute("user", user);
+
+        // Fetch all user's bank accounts
+        List<BankAccount> accounts = bankService.getAccountsByUser(user.getId());
+        model.addAttribute("accounts", accounts);
+
+        // Handle selected account
+        BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
+        if (selectedAccount == null && !accounts.isEmpty()) {
             // If there is no selected account, then choose the first one by default
-            if (selectedAccount == null && !accounts.isEmpty()) {
-                selectedAccount = accounts.getFirst();
-                session.setAttribute("selectedAccount", selectedAccount);
-            }
-            model.addAttribute("selectedAccount", selectedAccount);
-
-            return "menu";
+            selectedAccount = accounts.getFirst();
+            session.setAttribute("selectedAccount", selectedAccount);
         }
-        model.addAttribute("user", new LoginRequest());
-        return "login";
+
+        session.setAttribute("user", user);
+        session.setAttribute("userId", user.getId());
+        model.addAttribute("selectedAccount", selectedAccount);
+
+        return "menu";
     }
+
 
     @PostMapping("/selectAccount")
     public String selectAccount(@RequestParam Long accountId, HttpSession session) {
