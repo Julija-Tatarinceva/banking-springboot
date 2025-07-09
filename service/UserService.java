@@ -1,5 +1,7 @@
 package com.BankingApp.service;
 
+import com.BankingApp.exception.EmailAlreadyInUseException;
+import com.BankingApp.exception.UserNotFoundException;
 import com.BankingApp.model.User;
 import com.BankingApp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,31 +22,21 @@ public class UserService {
 
     public User findUserById(long id) {
         return userRepository.findById((int) id)
-                .orElseThrow(() -> new RuntimeException("User not found by id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found by id: " + id));
     }
     public Optional<User> findUserByEmail(String email) {
         return Optional.ofNullable(userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found by email: " + email)));
+                .orElseThrow(() -> new UserNotFoundException("User not found by email: " + email)));
     }
 
-//    public User authenticate(String email, String rawPassword) {
-//        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-//        User user = userRepository.findByEmail(email)
-//                .orElseThrow(() -> new RuntimeException("Account from not found"));
-////        if(user.getPassword().equals(rawPassword)) {
-////            return user;
-////        }
-//
-//        if (encoder.matches(rawPassword, user.getPassword())) {
-//            return user;
-//        }
-//        return null;
-//    }
     public User createAccount(String email, String rawPassword, String name) {
+        userRepository.findByEmail(email).ifPresent(existing -> {
+            throw new EmailAlreadyInUseException("Email already in use: " + email);
+        });
+
         // For security purposes we do not store raw password, only the encrypted version
         String encryptedPassword = new BCryptPasswordEncoder().encode(rawPassword);
         User account = new User(email, encryptedPassword, name);
         return userRepository.save(account);
     }
-
 }
