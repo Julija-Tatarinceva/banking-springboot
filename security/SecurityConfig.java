@@ -1,4 +1,4 @@
-package com.BankingApp.config;
+package com.BankingApp.security;
 
 import com.BankingApp.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,8 @@ public class SecurityConfig {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
-
+    @Autowired
+    private AuthenticationFailureHandler authenticationFailureHandler;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -33,6 +34,7 @@ public class SecurityConfig {
                         .passwordParameter("password")
                         .defaultSuccessUrl("/", true)
                         .failureUrl("/login?error=true")
+                        .failureHandler(authenticationFailureHandler)
                         .permitAll()
                 )
                 .logout(logout -> logout

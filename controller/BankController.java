@@ -21,7 +21,7 @@ public class BankController {
 
     private final BankService bankService;
     private final UserService userService;
-    final Logger logger = LogManager.getLogger(BankController.class);
+    private static final Logger logger = LogManager.getLogger(BankController.class);
 
     public BankController(BankService service, UserService userService) {
         this.bankService = service;
@@ -59,12 +59,18 @@ public class BankController {
 
 
     @PostMapping("/selectAccount")
-    public String selectAccount(@RequestParam Long accountId, HttpSession session) {
-        BankAccount account = bankService.getById(Math.toIntExact(accountId));
-
-        // Verify this account belongs to the logged-in user for security
-        if(account != null && account.getUser().getId() == (Integer) session.getAttribute("userId")){
-            session.setAttribute("selectedAccount", account);
+    public String selectAccount(@RequestParam Long accountId, HttpSession session, RedirectAttributes redirectAttrs) {
+        try {
+            BankAccount account = bankService.getById(Math.toIntExact(accountId));
+            Integer userId = (Integer) session.getAttribute("userId");
+            // Verify this account belongs to the logged-in user for security
+            if (account != null && account.getUser().getId() == userId) {
+                session.setAttribute("selectedAccount", account);
+            } else {
+                redirectAttrs.addFlashAttribute("error", "You do not own this account.");
+            }
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("error", "Account selection failed: " + e.getMessage());
         }
         return "redirect:/";
     }
@@ -77,11 +83,15 @@ public class BankController {
             return "redirect:/";
         }
 
-        bankService.deposit(selectedAccount.getId(), amount);
-        logger.info("Deposited {} from {}", amount, selectedAccount.getId());
-        // Update the object for the view to show updated data
-        session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
-        return "redirect:/";
+
+        try {
+            bankService.deposit(selectedAccount.getId(), amount);
+            logger.info("Deposited {} to account {}", amount, selectedAccount.getId());
+            session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
+            redirectAttrs.addFlashAttribute("success", "Deposit successful.");
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("depositError", "Deposit failed: " + e.getMessage());
+        }        return "redirect:/";
     }
 
     @PostMapping("/withdraw")
@@ -92,24 +102,34 @@ public class BankController {
             return "redirect:/";
         }
 
-        bankService.withdraw(selectedAccount.getId(), amount);
-        logger.info("Withdrawn {} from {}", amount, selectedAccount.getId());
+        try {
+            bankService.withdraw(selectedAccount.getId(), amount);
+            logger.info("Withdrawn {} from account {}", amount, selectedAccount.getId());
+            session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
+            redirectAttrs.addFlashAttribute("success", "Withdrawal successful.");
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("withdrawError", "Withdrawal failed: " + e.getMessage());
+        }
 
-        // Update the object for the view to show updated data
-        session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
         return "redirect:/";
     }
     @PostMapping("/transfer")
-    public String transfer(@RequestParam BigDecimal amount, @RequestParam int idTo, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String transfer(@RequestParam BigDecimal amount, @RequestParam int idTo,
+                           HttpSession session, RedirectAttributes redirectAttrs) {
         BankAccount selectedAccount = (BankAccount) session.getAttribute("selectedAccount");
         if (selectedAccount == null) {
             redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
             return "redirect:/";
         }
-        System.out.println("transfer from " + selectedAccount.getId() + " to " + idTo);
-        bankService.transfer(selectedAccount.getId(), idTo, amount);
-        logger.info("Transferred {} from {} to {}", amount, selectedAccount.getId(),  idTo);
-        session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
+
+        try {
+            logger.info("Attempting to transfer {} from {} to {}", amount, selectedAccount.getId(), idTo);
+            bankService.transfer(selectedAccount.getId(), idTo, amount);
+            session.setAttribute("selectedAccount", bankService.getById(selectedAccount.getId()));
+            redirectAttrs.addFlashAttribute("success", "Transfer successful.");
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("transferError", "Transfer failed: " + e.getMessage());
+        }
         return "redirect:/";
     }
 
@@ -119,12 +139,20 @@ public class BankController {
     }
 
     @PostMapping("/create")
-    public String create(@RequestParam BigDecimal balance, HttpSession session) {
+    public String create(@RequestParam BigDecimal balance, HttpSession session,
+                         RedirectAttributes redirectAttrs) {
         Integer userId = (Integer) session.getAttribute("userId");
         if (userId == null) {
             return "redirect:/login";
         }
-        bankService.createAccount(Math.toIntExact(userId), balance);
+
+        try {
+            bankService.createAccount(userId, balance);
+            redirectAttrs.addFlashAttribute("success", "Bank account created.");
+        } catch (Exception e) {
+            redirectAttrs.addFlashAttribute("error", "Account creation failed: " + e.getMessage());
+            return "redirect:/create"; // staying on creation page if didn't succeed
+        }
         return "redirect:/";  // back to menu after creation
     }
 

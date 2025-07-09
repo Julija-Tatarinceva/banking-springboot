@@ -46,9 +46,9 @@ public class BankService {
 
         // Validation
         BankAccount accountFrom = bankAccountRepository.findById(fromId)
-                .orElseThrow(() -> new BankAccountNotFoundException("Transfer: account 'from' not found"));
+                .orElseThrow(() -> new BankAccountNotFoundException("Transfer: transfer sender not found"));
         BankAccount accountTo = bankAccountRepository.findById(toId)
-                .orElseThrow(() -> new BankAccountNotFoundException("Transfer: account 'to' not found"));
+                .orElseThrow(() -> new BankAccountNotFoundException("Transfer: transfer receiver not found"));
         if (accountFrom == accountTo) {
             throw new TransferToSelfException("Attempted to transfer to self.");
         }

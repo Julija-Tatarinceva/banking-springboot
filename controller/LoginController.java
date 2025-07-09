@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class LoginController {
@@ -25,22 +26,15 @@ public class LoginController {
     }
 
     @GetMapping("/login")
-    public String loginForm(Model model) {
+    public String loginForm(HttpSession session, Model model) {
         model.addAttribute("user", new LoginRequest());
+        String errorMessage = (String) session.getAttribute("LOGIN_ERROR");
+        if (errorMessage != null) {
+            model.addAttribute("loginError", errorMessage);
+            session.removeAttribute("LOGIN_ERROR"); // Avoid showing it again after reload
+        }
         return "login";
     }
-
-//    @PostMapping("/login")
-//    public String loginSubmit(@ModelAttribute LoginRequest loginRequest, HttpSession session, Model model) {
-//        User user = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
-//        if (user == null) {
-//            model.addAttribute("error", "Invalid credentials");
-//            return "login";
-//        }
-//
-//        session.setAttribute("userId", user.getId());
-//        return "redirect:/";
-//    }
 
     @GetMapping("/register")
     public String registerForm(Model model) {
@@ -54,15 +48,5 @@ public class LoginController {
         session.setAttribute("userID", newUser.getId());
         return "redirect:/";
     }
-
-//    @GetMapping("/logout")
-//    public String logout(HttpSession session) {
-//        Integer userId = (Integer) session.getAttribute("userId");
-//        if (userId != null) {
-//            logger.info("User (id={}) logged out", userId);
-//        }
-//        session.invalidate();
-//        return "redirect:/login?logout";
-//    }
 }
 
