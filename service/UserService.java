@@ -24,9 +24,9 @@ public class UserService {
         return userRepository.findById((int) id)
                 .orElseThrow(() -> new UserNotFoundException("User not found by id: " + id));
     }
-    public Optional<User> findUserByEmail(String email) {
-        return Optional.ofNullable(userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found by email: " + email)));
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found by email: " + email));
     }
 
     public User createAccount(String email, String rawPassword, String name) {

@@ -7,6 +7,8 @@ import com.BankingApp.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +35,7 @@ public class BankController {
         String email = principal.getName(); // from Spring Security
 
         // Load the user directly by email
-        User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findUserByEmail(email);
 
         model.addAttribute("user", user);
 
@@ -59,12 +60,13 @@ public class BankController {
 
 
     @PostMapping("/selectAccount")
-    public String selectAccount(@RequestParam Long accountId, HttpSession session, RedirectAttributes redirectAttrs) {
+    public String selectAccount(@RequestParam Long accountId, HttpSession session,  @AuthenticationPrincipal UserDetails userDetails,  RedirectAttributes redirectAttrs) {
         try {
             BankAccount account = bankService.getById(Math.toIntExact(accountId));
-            Integer userId = (Integer) session.getAttribute("userId");
+            String email = userDetails.getUsername();
+            User user = userService.findUserByEmail(email);
             // Verify this account belongs to the logged-in user for security
-            if (account != null && account.getUser().getId() == userId) {
+            if (account != null && account.getUser().getId() == user.getId()) {
                 session.setAttribute("selectedAccount", account);
             } else {
                 redirectAttrs.addFlashAttribute("error", "You do not own this account.");
@@ -82,7 +84,6 @@ public class BankController {
             redirectAttrs.addFlashAttribute("error", "Please select a bank account first.");
             return "redirect:/";
         }
-
 
         try {
             bankService.deposit(selectedAccount.getId(), amount);
@@ -139,15 +140,17 @@ public class BankController {
     }
 
     @PostMapping("/create")
-    public String create(@RequestParam BigDecimal balance, HttpSession session,
+    public String create(@RequestParam BigDecimal balance,
+                         @AuthenticationPrincipal UserDetails userDetails,
                          RedirectAttributes redirectAttrs) {
-        Integer userId = (Integer) session.getAttribute("userId");
-        if (userId == null) {
+        String email = userDetails.getUsername();
+        User user = userService.findUserByEmail(email);
+        if (user == null) {
             return "redirect:/login";
         }
 
         try {
-            bankService.createAccount(userId, balance);
+            bankService.createAccount(user.getId(), balance);
             redirectAttrs.addFlashAttribute("success", "Bank account created.");
         } catch (Exception e) {
             redirectAttrs.addFlashAttribute("error", "Account creation failed: " + e.getMessage());
@@ -155,5 +158,4 @@ public class BankController {
         }
         return "redirect:/";  // back to menu after creation
     }
-
 }

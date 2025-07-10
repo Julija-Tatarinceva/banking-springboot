@@ -10,7 +10,7 @@ import java.util.Random;
 @Table(name = "bank_accounts")
 public class BankAccount implements Serializable {
     @Id
-    private final int id;
+    private int id;
     BigDecimal balance;
 
     @ManyToOne
@@ -55,6 +55,18 @@ public class BankAccount implements Serializable {
 
     public BigDecimal getBalance() {
         return balance;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     // Method for increasing the balance

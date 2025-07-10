@@ -11,9 +11,14 @@ public class Transaction implements Serializable {
     final Integer toAccount;
     final LocalDateTime timestamp;
 
-//    public Transaction() {
-//        System.out.println("Transaction created.");
-//    }
+    public Transaction() {
+        this.type = "test";
+        this.amount = BigDecimal.ZERO;
+        this.fromAccount = 1;
+        this.toAccount = 2;
+        this.timestamp = LocalDateTime.now();
+        System.out.println("Default transaction created.");
+    }
 
     public Transaction(String type, BigDecimal amount, Integer from, Integer to) {
         this.type = type;

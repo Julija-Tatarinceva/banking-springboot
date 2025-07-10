@@ -33,17 +33,16 @@ public class BankService {
                 .orElseThrow(() -> new BankAccountNotFoundException("Account not found"));
     }
 
-    public BankAccount createAccount(int userId, BigDecimal balance) {
+    public void /*BankAccount*/ createAccount(int userId, BigDecimal balance) {
         User userToBind = userService.findUserById(userId);
         if (balance == null || balance.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidTransactionAmountException("Attempted to create account with non-positive balance");
         }
         BankAccount account = new BankAccount(userToBind, balance);
-        return bankAccountRepository.save(account);
+        bankAccountRepository.save(account);
     }
 
     public Transaction transfer(int fromId, int toId, BigDecimal amount) {
-
         // Validation
         BankAccount accountFrom = bankAccountRepository.findById(fromId)
                 .orElseThrow(() -> new BankAccountNotFoundException("Transfer: transfer sender not found"));
@@ -64,7 +63,6 @@ public class BankService {
     }
 
     public Transaction deposit(int toId, BigDecimal amount) {
-
         // Validation
         if(amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidTransactionAmountException("Attempted to deposit non-positive amount");
